@@ -1,0 +1,1070 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard Cartomantes — Monitoria & Comissionamento</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+:root {
+  --ink: #1a1714;
+  --ink-soft: #3d3830;
+  --muted: #8a8278;
+  --border: #e8e3dc;
+  --bg: #faf8f5;
+  --card: #ffffff;
+  --gold: #c8993a;
+  --gold-bg: #fdf6e7;
+  --green: #1d8a61;
+  --green-bg: #eaf6f0;
+  --red: #c0392b;
+  --red-bg: #fdecea;
+  --amber: #b07418;
+  --amber-bg: #fdf1dc;
+  --blue: #2563a8;
+  --blue-bg: #eaf1fb;
+  --radius: 14px;
+  --radius-sm: 8px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--ink); min-height: 100vh; }
+h1,h2,h3,.serif { font-family: 'DM Serif Display', serif; }
+
+/* HEADER */
+.header {
+  background: var(--ink);
+  color: #fff;
+  padding: 2.5rem 3rem 2rem;
+  border-bottom: 3px solid var(--gold);
+  position: relative;
+  overflow: hidden;
+}
+.header::after {
+  content: '✦';
+  font-size: 200px;
+  opacity: 0.04;
+  position: absolute;
+  right: -20px;
+  top: -40px;
+  font-family: serif;
+}
+.header-eyebrow { font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: var(--gold); margin-bottom: 8px; }
+.header-title { font-family: 'DM Serif Display', serif; font-size: 36px; line-height: 1.1; color: #fff; margin-bottom: 6px; }
+.header-sub { font-size: 14px; color: rgba(255,255,255,0.55); font-weight: 300; }
+.header-meta { display: flex; gap: 24px; margin-top: 20px; flex-wrap: wrap; }
+.header-meta-item { font-size: 12px; color: rgba(255,255,255,0.5); }
+.header-meta-item strong { color: rgba(255,255,255,0.9); font-weight: 500; font-size: 14px; display: block; }
+
+/* TABS NAV */
+.tabs-nav {
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+  padding: 0 3rem;
+  display: flex;
+  gap: 0;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+}
+.tab-btn {
+  padding: 16px 24px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--muted);
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  transition: all .2s;
+  letter-spacing: .2px;
+}
+.tab-btn:hover { color: var(--ink); }
+.tab-btn.active { color: var(--ink); border-bottom-color: var(--gold); }
+
+/* CONTENT AREA */
+.content { padding: 2.5rem 3rem; max-width: 1400px; margin: 0 auto; }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* KPI GRID */
+.kpi-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 2rem; }
+.kpi {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  position: relative;
+  overflow: hidden;
+}
+.kpi::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--gold); }
+.kpi.green::before { background: var(--green); }
+.kpi.red::before { background: var(--red); }
+.kpi.blue::before { background: var(--blue); }
+.kpi.amber::before { background: var(--amber); }
+.kpi-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 8px; }
+.kpi-val { font-family: 'DM Serif Display', serif; font-size: 30px; color: var(--ink); line-height: 1; }
+.kpi-val span { font-size: 14px; font-family: 'DM Sans', sans-serif; color: var(--muted); font-weight: 300; }
+.kpi-sub { font-size: 11px; color: var(--muted); margin-top: 6px; }
+
+/* SECTION TITLE */
+.section-title {
+  font-family: 'DM Serif Display', serif;
+  font-size: 20px;
+  color: var(--ink);
+  margin-bottom: 14px;
+  margin-top: 2rem;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+.section-sub { font-size: 13px; color: var(--muted); margin-top: -10px; margin-bottom: 14px; font-family: 'DM Sans', sans-serif; font-weight: 300; }
+
+/* CHART CARD */
+.chart-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  margin-bottom: 16px;
+}
+.chart-card-title { font-size: 13px; font-weight: 600; color: var(--ink-soft); margin-bottom: 16px; text-transform: uppercase; letter-spacing: .8px; }
+.chart-wrap { position: relative; }
+
+/* GRID 2 */
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+.grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+
+/* FILTER PILLS */
+.filter-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; align-items: center; }
+.filter-label { font-size: 12px; color: var(--muted); }
+.pill {
+  font-size: 12px; padding: 5px 14px; border-radius: 999px;
+  border: 1px solid var(--border); background: var(--card);
+  color: var(--ink-soft); cursor: pointer; font-family: 'DM Sans', sans-serif;
+  transition: all .15s;
+}
+.pill:hover { border-color: var(--gold); }
+.pill.active { background: var(--ink); color: #fff; border-color: var(--ink); }
+
+/* CARDS GRID */
+.cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  transition: box-shadow .2s, transform .2s;
+}
+.card:hover { box-shadow: 0 8px 24px rgba(0,0,0,0.08); transform: translateY(-2px); }
+.card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+.avatar {
+  width: 40px; height: 40px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 600; flex-shrink: 0;
+  font-family: 'DM Serif Display', serif;
+}
+.card-name { font-weight: 600; font-size: 14px; color: var(--ink); }
+.card-sub { font-size: 12px; color: var(--muted); }
+.badges { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+.badge {
+  font-size: 11px; padding: 3px 9px; border-radius: 999px;
+  font-weight: 500; letter-spacing: .2px;
+}
+.badge-score { background: var(--blue-bg); color: var(--blue); }
+.badge-green { background: var(--green-bg); color: var(--green); }
+.badge-red { background: var(--red-bg); color: var(--red); }
+.badge-amber { background: var(--amber-bg); color: var(--amber); }
+.badge-gold { background: var(--gold-bg); color: var(--gold); border: 1px solid var(--gold); }
+
+/* CRITERIA BARS */
+.crit-list { display: flex; flex-direction: column; gap: 7px; }
+.crit-row { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+.crit-label { color: var(--muted); width: 80px; flex-shrink: 0; }
+.bar-track { flex: 1; height: 5px; background: var(--border); border-radius: 3px; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 3px; transition: width .4s ease; }
+.crit-val { font-size: 11px; color: var(--muted); width: 28px; text-align: right; }
+
+/* ALERT TABLE */
+.alert-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.alert-table th { text-align: left; padding: 10px 14px; font-size: 11px; text-transform: uppercase; letter-spacing: .8px; color: var(--muted); border-bottom: 2px solid var(--border); background: var(--bg); }
+.alert-table td { padding: 10px 14px; border-bottom: 1px solid var(--border); vertical-align: top; line-height: 1.5; }
+.alert-table tr:last-child td { border-bottom: none; }
+.alert-table tr:hover td { background: var(--bg); }
+.alert-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
+
+/* INSIGHT BOX */
+.insight-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-bottom: 2rem; }
+.insight-box {
+  border-radius: var(--radius-sm);
+  padding: 16px 18px;
+  border: 1px solid transparent;
+}
+.insight-box.gold { background: var(--gold-bg); border-color: #e8c96a; }
+.insight-box.green { background: var(--green-bg); border-color: #a0d9c3; }
+.insight-box.red { background: var(--red-bg); border-color: #e8a89e; }
+.insight-box.blue { background: var(--blue-bg); border-color: #a0c0e8; }
+.insight-box.amber { background: var(--amber-bg); border-color: #e0c080; }
+.insight-icon { font-size: 22px; margin-bottom: 8px; }
+.insight-title { font-size: 12px; font-weight: 600; color: var(--ink-soft); margin-bottom: 4px; text-transform: uppercase; letter-spacing: .6px; }
+.insight-val { font-family: 'DM Serif Display', serif; font-size: 18px; color: var(--ink); }
+.insight-sub { font-size: 11px; color: var(--muted); margin-top: 3px; }
+
+/* RANKING TABLE */
+.rank-table { width: 100%; border-collapse: collapse; }
+.rank-table th { text-align: left; padding: 10px 12px; font-size: 11px; text-transform: uppercase; letter-spacing: .8px; color: var(--muted); border-bottom: 2px solid var(--border); }
+.rank-table td { padding: 11px 12px; border-bottom: 1px solid var(--border); font-size: 13px; vertical-align: middle; }
+.rank-table tr:last-child td { border-bottom: none; }
+.rank-table tr:hover td { background: #faf8f5; }
+.rank-num { font-family: 'DM Serif Display', serif; font-size: 18px; color: var(--muted); width: 36px; }
+.rank-num.top { color: var(--gold); }
+.score-bar-wrap { display: flex; align-items: center; gap: 8px; }
+.score-bar-track { flex: 1; height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+.score-bar-fill { height: 100%; border-radius: 3px; }
+.star { color: var(--gold); }
+
+/* ALERT ALERT */
+.alert-banner {
+  background: var(--red-bg);
+  border: 1px solid #e8a89e;
+  border-radius: var(--radius-sm);
+  padding: 14px 18px;
+  margin-bottom: 16px;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+.alert-banner-icon { font-size: 20px; flex-shrink: 0; }
+.alert-banner-text { font-size: 13px; color: var(--ink-soft); line-height: 1.6; }
+.alert-banner-title { font-weight: 600; color: var(--red); margin-bottom: 2px; }
+
+/* SUCCESS BANNER */
+.success-banner {
+  background: var(--green-bg);
+  border: 1px solid #a0d9c3;
+  border-radius: var(--radius-sm);
+  padding: 14px 18px;
+  margin-bottom: 16px;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+.success-banner-icon { font-size: 20px; flex-shrink: 0; }
+.success-banner-text { font-size: 13px; color: var(--ink-soft); line-height: 1.6; }
+.success-banner-title { font-weight: 600; color: var(--green); margin-bottom: 2px; }
+
+/* PROGRESS RING */
+.ring-wrap { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.ring-label { font-size: 12px; color: var(--muted); text-align: center; }
+.ring-val { font-family: 'DM Serif Display', serif; font-size: 16px; color: var(--ink); }
+
+@media (max-width: 900px) {
+  .kpi-grid { grid-template-columns: repeat(2,1fr); }
+  .grid2, .grid3 { grid-template-columns: 1fr; }
+  .insight-grid { grid-template-columns: 1fr 1fr; }
+  .content { padding: 1.5rem 1rem; }
+  .header { padding: 1.5rem 1rem; }
+  .tabs-nav { padding: 0 1rem; overflow-x: auto; }
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-eyebrow">Gestão de Qualidade & Comissionamento</div>
+  <h1 class="header-title">Dashboard de Cartomantes</h1>
+  <div class="header-sub">Monitoria Mar–Abr 2026 · Comissionamento Abr 15–23 2026 · Elaborado por Larissa</div>
+  <div class="header-meta">
+    <div class="header-meta-item"><strong>121</strong>Atendimentos monitorados</div>
+    <div class="header-meta-item"><strong>7.323</strong>Atendimentos faturados</div>
+    <div class="header-meta-item"><strong>R$ 113.393</strong>Receita total gerada</div>
+    <div class="header-meta-item"><strong>24</strong>Cartomantes avaliados</div>
+    <div class="header-meta-item"><strong>28,1%</strong>Taxa de oferta nas monitorias</div>
+  </div>
+</div>
+
+<!-- TABS -->
+<nav class="tabs-nav">
+  <button class="tab-btn active" onclick="showTab('monitoria',this)">📋 Monitoria de Qualidade</button>
+  <button class="tab-btn" onclick="showTab('comissionamento',this)">💰 Comissionamento</button>
+  <button class="tab-btn" onclick="showTab('alertas',this)">⚠️ Alertas & Observações</button>
+  <button class="tab-btn" onclick="showTab('ranking',this)">🏆 Ranking Geral</button>
+</nav>
+
+<div class="content">
+
+<!-- ===================== TAB: MONITORIA ===================== -->
+<div class="tab-panel active" id="tab-monitoria">
+
+  <!-- INSIGHTS -->
+  <div class="section-title" style="margin-top:0">Diagnóstico Geral</div>
+  <div class="insight-grid" style="grid-template-columns:repeat(6,1fr)">
+    <div class="insight-box gold">
+      <div class="insight-icon">⭐</div>
+      <div class="insight-title">Score médio</div>
+      <div class="insight-val">2,84<small style="font-size:13px;font-weight:300;font-family:'DM Sans',sans-serif">/3</small></div>
+      <div class="insight-sub">Escala Ruim→Bom</div>
+    </div>
+    <div class="insight-box green">
+      <div class="insight-icon">🏅</div>
+      <div class="insight-title">Nota máxima 3.0</div>
+      <div class="insight-val">15 cartomantes</div>
+      <div class="insight-sub">51,7% da equipe</div>
+    </div>
+    <div class="insight-box red">
+      <div class="insight-icon">🚨</div>
+      <div class="insight-title">Atenção crítica</div>
+      <div class="insight-val">Gaia · Maya · Celéstia</div>
+      <div class="insight-sub">Score abaixo de 2,5</div>
+    </div>
+    <div class="insight-box blue">
+      <div class="insight-icon">📣</div>
+      <div class="insight-title">Taxa de oferta</div>
+      <div class="insight-val">28,1%</div>
+      <div class="insight-sub">34 de 121 monitorias</div>
+    </div>
+    <div class="insight-box amber">
+      <div class="insight-icon">🔄</div>
+      <div class="insight-title">Sem oferta</div>
+      <div class="insight-val">71,9%</div>
+      <div class="insight-sub">87 atend. com oportunidade perdida</div>
+    </div>
+    <div class="insight-box green">
+      <div class="insight-icon">📈</div>
+      <div class="insight-title">Tom de Voz</div>
+      <div class="insight-val">Melhor critério</div>
+      <div class="insight-sub">Média 2,98/3</div>
+    </div>
+  </div>
+
+  <!-- BANNERS -->
+  <div class="alert-banner">
+    <div class="alert-banner-icon">⚠️</div>
+    <div class="alert-banner-text">
+      <div class="alert-banner-title">Principal problema recorrente: Falta de oferta complementar</div>
+      87 atendimentos monitorados (71,9%) tiveram oportunidade de oferta e não foram aproveitados. Ganesha, Athena, Celéstia, Maya e Gaia apresentam 0% de oferta. Maya recebeu feedback e não aplicou em atendimentos consecutivos — indicando necessidade de reciclagem imediata.
+    </div>
+  </div>
+  <div class="success-banner">
+    <div class="success-banner-icon">✅</div>
+    <div class="success-banner-text">
+      <div class="success-banner-title">Destaques positivos: Héra e Odara com 100% de oferta</div>
+      Héra (4 monitorias) e Odara (3 monitorias) ofertaram em 100% dos atendimentos com score máximo 3.0. Luna e Quésia atingiram 80% de oferta com score perfeito. São referências ideais para multiplicar boas práticas com o restante da equipe.
+    </div>
+  </div>
+
+  <!-- SCORE CHART -->
+  <div class="chart-card">
+    <div class="chart-card-title">Score médio por cartomante — ordenado do maior para menor</div>
+    <div class="chart-wrap" style="height:680px">
+      <canvas id="scoreChart"></canvas>
+    </div>
+  </div>
+
+  <!-- CRITERIA RADAR-LIKE + OFERTA -->
+  <div class="grid2">
+    <div class="chart-card">
+      <div class="chart-card-title">Critérios mais fracos (média por critério)</div>
+      <div class="chart-wrap" style="height:240px">
+        <canvas id="criteriosChart"></canvas>
+      </div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-card-title">Taxa de oferta complementar — quem oferta mais?</div>
+      <div class="chart-wrap" style="height:240px">
+        <canvas id="ofertaChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- EVOLUÇÃO TEMPORAL -->
+  <div class="chart-card">
+    <div class="chart-card-title">Evolução do score médio ao longo das monitorias</div>
+    <div class="chart-wrap" style="height:200px">
+      <canvas id="evolucaoChart"></canvas>
+    </div>
+  </div>
+
+  <!-- CARDS POR CARTOMANTE -->
+  <div class="section-title">Perfil individual de qualidade</div>
+  <div class="filter-row">
+    <span class="filter-label">Filtrar:</span>
+    <button class="pill active" onclick="filterMon('all',this)">Todos (29)</button>
+    <button class="pill" onclick="filterMon('top',this)">⭐ Score 3.0</button>
+    <button class="pill" onclick="filterMon('oferta',this)">📣 Ofertaram</button>
+    <button class="pill" onclick="filterMon('atencao',this)">🚨 Atenção</button>
+    <button class="pill" onclick="filterMon('semoferta',this)">⛔ Nunca ofertou</button>
+  </div>
+  <div class="cards-grid" id="monCards"></div>
+</div>
+
+<!-- ===================== TAB: COMISSIONAMENTO ===================== -->
+<div class="tab-panel" id="tab-comissionamento">
+
+  <div class="kpi-grid">
+    <div class="kpi">
+      <div class="kpi-label">Receita total</div>
+      <div class="kpi-val">R$ 113.393</div>
+      <div class="kpi-sub">Período completo · 28 cartomantes</div>
+    </div>
+    <div class="kpi green">
+      <div class="kpi-label">Comissão paga</div>
+      <div class="kpi-val">R$ 6.693</div>
+      <div class="kpi-sub">R$ 22.483 comissão total gerada</div>
+    </div>
+    <div class="kpi red">
+      <div class="kpi-label">Comissão em aberto</div>
+      <div class="kpi-val">R$ 15.790</div>
+      <div class="kpi-sub">70,2% ainda pendente</div>
+    </div>
+    <div class="kpi amber">
+      <div class="kpi-label">Ticket médio</div>
+      <div class="kpi-val">R$ 15,49</div>
+      <div class="kpi-sub">28 cartomantes ativos</div>
+    </div>
+    <div class="kpi blue">
+      <div class="kpi-label">Magias realizadas</div>
+      <div class="kpi-val">10 <span>× R$ 198</span></div>
+      <div class="kpi-sub">R$ 1.980 gerados</div>
+    </div>
+  </div>
+
+  <!-- INSIGHT RECEITA -->
+  <div class="insight-grid">
+    <div class="insight-box gold">
+      <div class="insight-icon">👑</div>
+      <div class="insight-title">Top receita</div>
+      <div class="insight-val">Carla</div>
+      <div class="insight-sub">R$ 7.151 · 451 atend. · R$15,86 ticket</div>
+    </div>
+    <div class="insight-box green">
+      <div class="insight-icon">🎯</div>
+      <div class="insight-title">Melhor ticket médio</div>
+      <div class="insight-val">Mariana</div>
+      <div class="insight-sub">R$ 17,31 por atendimento</div>
+    </div>
+    <div class="insight-box blue">
+      <div class="insight-icon">⚡</div>
+      <div class="insight-title">Mais produtiva/dia</div>
+      <div class="insight-val">Carla</div>
+      <div class="insight-sub">451 atend. · Maior volume total</div>
+    </div>
+    <div class="insight-box amber">
+      <div class="insight-icon">🔑</div>
+      <div class="insight-title">Pacote líder</div>
+      <div class="insight-val">3 Perguntas R$12</div>
+      <div class="insight-sub">2.323 vendas = 52,6% do volume</div>
+    </div>
+    <div class="insight-box red">
+      <div class="insight-icon">📉</div>
+      <div class="insight-title">Menor volume</div>
+      <div class="insight-val">Rayza</div>
+      <div class="insight-sub">82 atend. · menor cartomante</div>
+    </div>
+    <div class="insight-box green">
+      <div class="insight-icon">💎</div>
+      <div class="insight-title">Dias pico</div>
+      <div class="insight-val">Domingo 20/04</div>
+      <div class="insight-sub">799 atend. · R$ 12.686 em 1 dia</div>
+    </div>
+  </div>
+
+  <!-- RECEITA CHART -->
+  <div class="chart-card">
+    <div class="chart-card-title">Receita × comissão por cartomante</div>
+    <div class="chart-wrap" style="height:660px">
+      <canvas id="comReceitaChart"></canvas>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <div class="chart-card">
+      <div class="chart-card-title">Evolução diária — atendimentos e receita</div>
+      <div class="chart-wrap" style="height:240px">
+        <canvas id="dailyChart"></canvas>
+      </div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-card-title">Concentração de atendimentos por hora do dia</div>
+      <div class="chart-wrap" style="height:240px">
+        <canvas id="hourlyChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <div class="chart-card">
+      <div class="chart-card-title">Pacotes mais vendidos (top 10 por volume)</div>
+      <div class="chart-wrap" style="height:260px">
+        <canvas id="pkgChart"></canvas>
+      </div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-card-title">Ranking de ticket médio por cartomante</div>
+      <div class="chart-wrap" style="height:260px">
+        <canvas id="ticketChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- TABELA COMPLETA -->
+  <div class="section-title">Tabela completa de comissionamento</div>
+  <div class="filter-row">
+    <span class="filter-label">Ordenar:</span>
+    <button class="pill active" onclick="sortTable('receita',this)">Por receita</button>
+    <button class="pill" onclick="sortTable('atend',this)">Por volume</button>
+    <button class="pill" onclick="sortTable('ticket',this)">Por ticket</button>
+    <button class="pill" onclick="sortTable('comissao',this)">Por comissão</button>
+  </div>
+  <div class="chart-card" style="padding:0;overflow:hidden">
+    <table class="rank-table" id="comTable">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Cartomante</th>
+          <th>Atend.</th>
+          <th>Receita</th>
+          <th>Ticket médio</th>
+          <th>Comissão total</th>
+          <th>Comissão paga</th>
+          <th>Em aberto</th>
+          <th>Dias ativos</th>
+          <th>Magias</th>
+        </tr>
+      </thead>
+      <tbody id="comTableBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ===================== TAB: ALERTAS ===================== -->
+<div class="tab-panel" id="tab-alertas">
+
+  <div class="section-title" style="margin-top:0">Resumo de Alertas da Monitoria</div>
+
+  <!-- Categorized alerts -->
+  <div class="grid3">
+    <div class="chart-card" style="background:var(--red-bg);border-color:#e8a89e">
+      <div class="chart-card-title" style="color:var(--red)">🚨 Crítico — Score abaixo de 2.5</div>
+      <div style="font-size:13px;color:var(--ink-soft);line-height:1.9">
+        <div>• <strong>Thália</strong> — Score 1.40 (1 monitoria)</div>
+        <div>• <strong>Gaia</strong> — Score 2.16 (5 monitorias)</div>
+        <div>• <strong>Maya</strong> — Score 2.40 (não aplicou feedback)</div>
+        <div>• <strong>Celéstia</strong> — Score 2.48 (tempo mínimo)</div>
+      </div>
+    </div>
+    <div class="chart-card" style="background:var(--amber-bg);border-color:#e0c080">
+      <div class="chart-card-title" style="color:var(--amber)">⚠️ Atenção — Problemas recorrentes</div>
+      <div style="font-size:13px;color:var(--ink-soft);line-height:1.9">
+        <div>• <strong>Baronesa Luz</strong> — 0% oferta, tempo mínimo</div>
+        <div>• <strong>Rafael/Hermes</strong> — Saudação inconsistente</div>
+        <div>• <strong>Celina</strong> — Errou nome do consulente</div>
+        <div>• <strong>Freyja</strong> — Oferta indireta (não converte)</div>
+        <div>• <strong>Ícaro</strong> — Condução 2.2/3</div>
+      </div>
+    </div>
+    <div class="chart-card" style="background:var(--blue-bg);border-color:#a0c0e8">
+      <div class="chart-card-title" style="color:var(--blue)">📋 Padrões identificados</div>
+      <div style="font-size:13px;color:var(--ink-soft);line-height:1.9">
+        <div>• Tempo mínimo de resposta: 4 cartomantes</div>
+        <div>• Saudação inicial: 3 cartomantes</div>
+        <div>• Oportunidade de oferta perdida: 22 cartomantes</div>
+        <div>• Afirmação indevida (traição/3ºs): Celéstia</div>
+        <div>• Cliente sem resposta (Gaia): 1 ocorrência grave</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DETAILED OBS TABLE -->
+  <div class="chart-card" style="padding:0;overflow:hidden">
+    <table class="alert-table">
+      <thead>
+        <tr>
+          <th>Data</th>
+          <th>Cartomante</th>
+          <th>Tipo</th>
+          <th>Observação</th>
+          <th>Gravidade</th>
+        </tr>
+      </thead>
+      <tbody id="obsTableBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ===================== TAB: RANKING ===================== -->
+<div class="tab-panel" id="tab-ranking">
+
+  <div class="section-title" style="margin-top:0">Ranking Combinado — Qualidade + Comercial</div>
+  <div class="section-sub">Score de qualidade vem da monitoria. Volume e receita vêm do comissionamento. Use como base para bonificações e reconhecimento.</div>
+
+  <div class="grid2">
+    <div class="chart-card">
+      <div class="chart-card-title">🏆 Top 10 — Por score de qualidade</div>
+      <div id="rankQual"></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-card-title">💰 Top 10 — Por receita gerada</div>
+      <div id="rankReceita"></div>
+    </div>
+  </div>
+
+  <div class="chart-card">
+    <div class="chart-card-title">Matriz Qualidade × Volume — Onde cada cartomante se posiciona</div>
+    <div class="section-sub" style="margin-top:-10px;margin-bottom:10px;font-size:12px">Eixo X = Volume de atendimentos faturados · Eixo Y = Score de qualidade na monitoria · Bolhas disponíveis para cartomantes presentes em ambas as bases</div>
+    <div class="chart-wrap" style="height:380px">
+      <canvas id="matrizChart"></canvas>
+    </div>
+  </div>
+
+  <div class="section-title">Perfis de Performance</div>
+  <div class="grid2">
+    <div class="chart-card" style="background:var(--gold-bg);border-color:#e8c96a">
+      <div class="chart-card-title" style="color:#7a5c00">⭐ ESTRELAS — Alta qualidade + Alto volume</div>
+      <div style="font-size:13px;color:var(--ink-soft);line-height:2">
+        <div>• <strong>Cigana Sarah</strong> — Score 3.0 · 274 atend. · R$4.323</div>
+        <div>• <strong>Luziara</strong> — Score 3.0 · 241 atend. · R$3.967</div>
+        <div>• <strong>Quésia</strong> — Score 3.0 · 199 atend. · R$3.098</div>
+        <div>• <strong>Luna</strong> — Score 3.0 · 140 atend. · R$2.287</div>
+      </div>
+    </div>
+    <div class="chart-card" style="background:var(--blue-bg);border-color:#a0c0e8">
+      <div class="chart-card-title" style="color:#1a4a88">🔧 POTENCIAL — Alta qualidade · Menor volume</div>
+      <div style="font-size:13px;color:var(--ink-soft);line-height:2">
+        <div>• <strong>Odara</strong> — Score 3.0 · 228 atend. · R$3.562</div>
+        <div>• <strong>Héra</strong> — Score 3.0 · 125 atend. (menor volume)</div>
+        <div>• <strong>Eulália</strong> — Score 3.0 · nova, 1 monitoria</div>
+        <div>• <strong>Ártemis</strong> — Score 3.0 · 207 atend. · R$3.108</div>
+      </div>
+    </div>
+    <div class="chart-card" style="background:var(--green-bg);border-color:#a0d9c3">
+      <div class="chart-card-title" style="color:#0f5e3e">📈 CRESCIMENTO — Em evolução, bom volume</div>
+      <div style="font-size:13px;color:var(--ink-soft);line-height:2">
+        <div>• <strong>Baronesa Luz</strong> — Score 2.96 · 169 atend. · R$2.629</div>
+        <div>• <strong>Rafael/Hermes</strong> — Score 2.91 · 208 atend. · R$3.334</div>
+        <div>• <strong>Magnus</strong> — Score 2.92 · 174 atend. · R$3.038</div>
+        <div>• <strong>Freyja</strong> — Score 2.70 · 108 atend. · R$1.842</div>
+      </div>
+    </div>
+    <div class="chart-card" style="background:var(--red-bg);border-color:#e8a89e">
+      <div class="chart-card-title" style="color:var(--red)">🚨 DESENVOLVIMENTO URGENTE</div>
+      <div style="font-size:13px;color:var(--ink-soft);line-height:2">
+        <div>• <strong>Thália</strong> — Score 1.40 · 1 monitoria · reciclagem obrigatória</div>
+        <div>• <strong>Gaia</strong> — Score 2.16 · cliente sem resposta · leitura ruim</div>
+        <div>• <strong>Maya</strong> — Score 2.40 · não aplicou feedback recebido</div>
+        <div>• <strong>Celéstia</strong> — Score 2.48 · afirmações indevidas</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+</div><!-- /content -->
+
+<script>
+// ===================== DATA =====================
+const monData = [
+  {nome:'Apólo',n:4,score:3.00,clareza:3,profund:3,acolh:3,tom:3,conduc:3,oferta:75},
+  {nome:'Cigana Sarah',n:5,score:3.00,clareza:3,profund:3,acolh:3,tom:3,conduc:3,oferta:20},
+  {nome:'Eulália',n:1,score:3.00,clareza:3,profund:3,acolh:3,tom:3,conduc:3,oferta:0},
+  {nome:'Ganesha',n:5,score:3.00,clareza:3,profund:3,acolh:3,tom:3,conduc:3,oferta:0},
+  {nome:'Héra',n:4,score:3.00,clareza:3,profund:3,acolh:3,tom:3,conduc:3,oferta:100},
+  {nome:'Kalindra',n:5,score:3.00,clareza:3,profund:3,acolh:3,tom:3,conduc:3,oferta:0},
+  {nome:'Luna',n:5,score:3.00,clareza:3,profund:3,acolh:3,tom:3,conduc:3,oferta:80},
+  {nome:'Luziara',n:5,score:3.00,clareza:3,profund:3,acolh:3,tom:3,conduc:3,oferta:40},
+  {nome:'Odara',n:3,score:3.00,clareza:3,profund:3,acolh:3,tom:3,conduc:3,oferta:100},
+  {nome:'Pérola do Oriente',n:5,score:3.00,clareza:3,profund:3,acolh:3,tom:3,conduc:3,oferta:40},
+  {nome:'Quésia',n:5,score:3.00,clareza:3,profund:3,acolh:3,tom:3,conduc:3,oferta:80},
+  {nome:'Rosa da Estrada',n:5,score:3.00,clareza:3,profund:3,acolh:3,tom:3,conduc:3,oferta:60},
+  {nome:'Rubi',n:5,score:3.00,clareza:3,profund:3,acolh:3,tom:3,conduc:3,oferta:0},
+  {nome:'Ártemis',n:4,score:3.00,clareza:3,profund:3,acolh:3,tom:3,conduc:3,oferta:75},
+  {nome:'Valentina',n:5,score:2.96,clareza:3,profund:3,acolh:3,tom:3,conduc:2.8,oferta:60},
+  {nome:'Rosa Mística',n:5,score:2.96,clareza:3,profund:3,acolh:3,tom:3,conduc:2.8,oferta:20},
+  {nome:'Magnus',n:5,score:2.92,clareza:3,profund:3,acolh:3,tom:3,conduc:2.6,oferta:0},
+  {nome:'Mago Izack',n:5,score:2.92,clareza:3,profund:3,acolh:3,tom:3,conduc:2.6,oferta:0},
+  {nome:'Rafael /Hermes',n:16,score:2.91,clareza:3,profund:2.88,acolh:2.94,tom:3,conduc:2.75,oferta:6.2},
+  {nome:'Athena',n:4,score:2.85,clareza:3,profund:3,acolh:3,tom:3,conduc:2.25,oferta:0},
+  {nome:'Ícaro',n:5,score:2.76,clareza:3,profund:2.6,acolh:3,tom:3,conduc:2.2,oferta:0},
+  {nome:'Celéstia',n:5,score:2.48,clareza:2.4,profund:2.2,acolh:2.6,tom:3,conduc:2.2,oferta:0},
+  {nome:'Maya',n:5,score:2.40,clareza:3,profund:2,acolh:2,tom:3,conduc:2,oferta:0},
+  {nome:'Gaia',n:5,score:2.16,clareza:2,profund:2,acolh:2.2,tom:2.6,conduc:2,oferta:0},
+];
+
+const comData = [
+  {nome:'Carla',atend:451,receita:7151.17,comissao:1410.23,ticket:15.86,pago:0,aberto:1410.23},
+  {nome:'Roseliana',atend:421,receita:6639.97,comissao:1327.99,ticket:15.77,pago:793.56,aberto:534.43},
+  {nome:'Yara',atend:401,receita:6056.81,comissao:1211.36,ticket:15.10,pago:0,aberto:1211.36},
+  {nome:'Carol',atend:368,receita:5586.57,comissao:1097.31,ticket:15.18,pago:0,aberto:1097.31},
+  {nome:'Maria Layza',atend:360,receita:5464.33,comissao:1072.87,ticket:15.18,pago:534.65,aberto:538.22},
+  {nome:'Nanda',atend:360,receita:5348.80,comissao:1069.76,ticket:14.86,pago:0,aberto:1069.76},
+  {nome:'Rafael',atend:342,receita:5288.68,comissao:1037.74,ticket:15.46,pago:817.21,aberto:220.53},
+  {nome:'Kennedy',atend:305,receita:5079.70,comissao:995.94,ticket:16.65,pago:0,aberto:995.94},
+  {nome:'Victor',atend:319,receita:5026.14,comissao:985.23,ticket:15.75,pago:0,aberto:985.23},
+  {nome:'Kerle',atend:332,receita:5021.89,comissao:1004.38,ticket:15.13,pago:0,aberto:1004.38},
+  {nome:'Néia',atend:306,receita:4947.53,comissao:989.51,ticket:16.17,pago:374.23,aberto:615.28},
+  {nome:'Isis',atend:308,receita:4787.72,comissao:957.54,ticket:15.55,pago:518.75,aberto:438.79},
+  {nome:'Cauã',atend:309,receita:4670.18,comissao:934.04,ticket:15.11,pago:647.15,aberto:286.89},
+  {nome:'Barbara',atend:302,receita:4541.24,comissao:908.25,ticket:15.04,pago:0,aberto:908.25},
+  {nome:'Mayura',atend:283,receita:4310.52,comissao:862.10,ticket:15.23,pago:862.10,aberto:0},
+  {nome:'Arthur',atend:248,receita:3903.85,comissao:780.77,ticket:15.74,pago:0,aberto:780.77},
+  {nome:'Isaac',atend:260,receita:3874.14,comissao:774.83,ticket:14.90,pago:0,aberto:774.83},
+  {nome:'Luzimar',atend:254,receita:3860.47,comissao:772.09,ticket:15.20,pago:696.05,aberto:76.04},
+  {nome:'Fernanda',atend:235,receita:3617.17,comissao:723.43,ticket:15.39,pago:0,aberto:723.43},
+  {nome:'Carolina',atend:199,receita:3228.42,comissao:625.68,ticket:16.22,pago:0,aberto:625.68},
+  {nome:'Fabiana luiza',atend:203,receita:2999.25,comissao:599.85,ticket:14.78,pago:113.79,aberto:486.06},
+  {nome:'Alexia',atend:166,receita:2581.75,comissao:496.35,ticket:15.55,pago:0,aberto:496.35},
+  {nome:'Mariana',atend:133,receita:2301.85,comissao:444.37,ticket:17.31,pago:444.37,aberto:0},
+  {nome:'Bianca',atend:135,receita:2025.11,comissao:405.02,ticket:15.00,pago:243.53,aberto:161.49},
+  {nome:'Estephane',atend:124,receita:1961.96,comissao:392.39,ticket:15.82,pago:392.39,aberto:0},
+  {nome:'Nárgila',atend:108,receita:1842.43,comissao:348.49,ticket:17.06,pago:0,aberto:348.49},
+  {nome:'Rayza',atend:82,receita:1213.95,comissao:242.79,ticket:14.80,pago:242.79,aberto:0},
+  {nome:'Maria layza',atend:4,receita:62.25,comissao:12.45,ticket:15.56,pago:12.45,aberto:0},
+];
+
+const dailyData = [
+  {d:'15/04',a:366,r:5866.71},{d:'16/04',a:489,r:7516.83},{d:'17/04',a:386,r:5921.81},
+  {d:'18/04',a:415,r:6746.72},{d:'19/04',a:451,r:6943.25},{d:'20/04',a:799,r:12686.51},
+  {d:'21/04',a:581,r:9380.07},{d:'22/04',a:577,r:9020.77},{d:'23/04',a:353,r:5265.06}
+];
+
+const hourlyData = [
+  {h:0,a:242},{h:1,a:182},{h:2,a:20},{h:3,a:1},{h:7,a:13},{h:8,a:131},{h:9,a:238},
+  {h:10,a:206},{h:11,a:197},{h:12,a:232},{h:13,a:318},{h:14,a:342},{h:15,a:268},
+  {h:16,a:250},{h:17,a:194},{h:18,a:252},{h:19,a:214},{h:20,a:288},{h:21,a:278},
+  {h:22,a:299},{h:23,a:252}
+];
+
+const pkgData = [
+  {p:'3P — R$12',n:2323},{p:'5P+C — R$19,35',n:1169},{p:'Renovação — R$10,90',n:134},
+  {p:'Reconciliação — R$26,50',n:112},{p:'7P — R$25,80',n:88},{p:'Área da vida — R$18,90',n:79},
+  {p:'Templo Afrodite — R$32,90',n:70},{p:'P.Grátis — R$3,33',n:66},{p:'Simpatia — R$10',n:60},
+  {p:'5P+C — R$14,90',n:46}
+];
+
+const obsData = [
+  {data:'27/03',nome:'Rafael/Hermes',obs:'Não iniciou com a saudação',tipo:'Saudação',grav:'media'},
+  {data:'27/03',nome:'Rafael/Hermes',obs:'Não enviou saudação, foi rápido demais',tipo:'Saudação',grav:'media'},
+  {data:'28/03',nome:'Celina',obs:'Não enviou a saudação e errou o nome do consulente',tipo:'Saudação / Erro',grav:'alta'},
+  {data:'30/03',nome:'Baronesa Luz',obs:'Teve oportunidade e não ofereceu venda complementar (9×)',tipo:'Oferta',grav:'media'},
+  {data:'30/03',nome:'Baronesa Luz',obs:'Não respeitou o tempo mínimo de resposta por pergunta',tipo:'Tempo',grav:'media'},
+  {data:'30/03',nome:'Celina',obs:'Teve oportunidade e não ofereceu venda complementar; não enviou saudação',tipo:'Oferta / Saudação',grav:'media'},
+  {data:'30/03',nome:'Gaia',obs:'Deixou a cliente sem resposta das perguntas 2 e 5 e sem conselho. Leitura ruim e repetitiva',tipo:'Qualidade grave',grav:'critica'},
+  {data:'31/03',nome:'Gaia',obs:'Deixou cliente 1 hora esperando na caixinha; a própria cliente atribuiu para Maya',tipo:'Abandono',grav:'critica'},
+  {data:'31/03',nome:'Gaia',obs:'Bocejou no meio da leitura',tipo:'Conduta',grav:'alta'},
+  {data:'31/03',nome:'Athena',obs:'Teve oportunidade e não ofereceu venda complementar (4×)',tipo:'Oferta',grav:'media'},
+  {data:'31/03',nome:'Apólo',obs:'Ofertou mas não viu a resposta da cliente — ficou falando sozinha',tipo:'Atenção ao cliente',grav:'alta'},
+  {data:'01/04',nome:'Ganesha',obs:'Teve oportunidade e não ofereceu venda complementar (5×)',tipo:'Oferta',grav:'media'},
+  {data:'01/04',nome:'Celéstia',obs:'Afirmou encontro afetivo de terceiros — conduta indevida',tipo:'Conduta grave',grav:'critica'},
+  {data:'01/04',nome:'Celéstia',obs:'Confirmou traição — conduta indevida',tipo:'Conduta grave',grav:'critica'},
+  {data:'01/04',nome:'Celéstia',obs:'Não respeitou tempo mínimo de resposta (5×)',tipo:'Tempo',grav:'alta'},
+  {data:'02/04',nome:'Rafael/Hermes',obs:'Teve oportunidade e não ofereceu venda complementar (3×); não enviou saudação',tipo:'Oferta / Saudação',grav:'media'},
+  {data:'06/04',nome:'Maya',obs:'Não respeitou tempo mínimo de resposta por pergunta (3×)',tipo:'Tempo',grav:'alta'},
+  {data:'06/04',nome:'Maya',obs:'Feedback dado sobre oferta e tempo — não colocou em prática',tipo:'Resistência a feedback',grav:'critica'},
+  {data:'07/04',nome:'Maya',obs:'Novamente não aplicou o feedback recebido (2× confirmado)',tipo:'Resistência a feedback',grav:'critica'},
+  {data:'07/04',nome:'Freyja',obs:'Ofertou produtos de forma indireta (não converte; precisa de treino direto)',tipo:'Oferta indireta',grav:'media'},
+];
+
+// ===================== COLORS =====================
+function scoreColor(s){
+  if(s>=2.9) return '#1d8a61';
+  if(s>=2.5) return '#b07418';
+  return '#c0392b';
+}
+function gravColor(g){
+  if(g==='critica') return '#c0392b';
+  if(g==='alta') return '#b07418';
+  return '#2563a8';
+}
+const avatarPalette=[
+  ['#e6f1fb','#185fa5'],['#eaf3de','#3b6d11'],['#e1f5ee','#0f6e56'],['#eeedfe','#534ab7'],
+  ['#faece7','#993c1d'],['#faeeda','#854f0b'],['#fbeaf0','#993556'],['#fcebeb','#a32d2d'],
+  ['#f1efe8','#5f5e5a'],['#e1f5ee','#085041'],['#eeedfe','#3c3489'],['#fdf3e7','#7a4210'],
+  ['#e6f1fb','#0f4c81'],['#fff0f0','#8b1a1a'],['#f0f4e8','#3a5a0a'],
+];
+function getInitials(n){return n.split(/[\s\/]+/).map(w=>w[0]).join('').toUpperCase().slice(0,2);}
+
+// ===================== TAB SWITCH =====================
+function showTab(id, btn){
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ===================== MONITORIA CARDS =====================
+function filterMon(f, btn){
+  document.querySelectorAll('.filter-row .pill').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+  let d=[...monData];
+  if(f==='top') d=d.filter(x=>x.score>=3.0);
+  else if(f==='oferta') d=d.filter(x=>x.oferta>0);
+  else if(f==='atencao') d=d.filter(x=>x.score<2.5);
+  else if(f==='semoferta') d=d.filter(x=>x.oferta===0);
+  renderMonCards(d);
+}
+function renderMonCards(data){
+  const c=document.getElementById('monCards');
+  c.innerHTML=data.map((d,i)=>{
+    const [bg,fg]=avatarPalette[monData.indexOf(d)%avatarPalette.length];
+    const crits=[
+      {l:'Clareza',v:d.clareza},{l:'Profundidade',v:d.profund},
+      {l:'Acolhimento',v:d.acolh},{l:'Tom de Voz',v:d.tom},{l:'Condução',v:d.conduc}
+    ];
+    const star=d.score>=3?'<span class="star"> ★</span>':'';
+    const badgeOferta=d.oferta>0
+      ?`<span class="badge badge-green">Oferta ${d.oferta.toFixed(0)}%</span>`
+      :`<span class="badge badge-red">0% oferta</span>`;
+    const badgeScore=d.score>=3?'<span class="badge badge-gold">Score 3.0</span>'
+      :d.score>=2.5?`<span class="badge badge-score">Score ${d.score.toFixed(2)}</span>`
+      :`<span class="badge badge-red">Score ${d.score.toFixed(2)}</span>`;
+    return `<div class="card">
+      <div class="card-header">
+        <div class="avatar" style="background:${bg};color:${fg}">${getInitials(d.nome)}</div>
+        <div><div class="card-name">${d.nome}${star}</div><div class="card-sub">${d.n} monitoria${d.n>1?'s':''}</div></div>
+      </div>
+      <div class="badges">${badgeScore}${badgeOferta}</div>
+      <div class="crit-list">
+        ${crits.map(c=>`<div class="crit-row">
+          <span class="crit-label">${c.l}</span>
+          <div class="bar-track"><div class="bar-fill" style="width:${(c.v/3*100).toFixed(0)}%;background:${scoreColor(c.v)}"></div></div>
+          <span class="crit-val">${c.v.toFixed(1)}</span>
+        </div>`).join('')}
+      </div>
+    </div>`;
+  }).join('');
+}
+renderMonCards(monData);
+
+// ===================== ALERTS TABLE =====================
+document.getElementById('obsTableBody').innerHTML = obsData.map(o=>{
+  const color=gravColor(o.grav);
+  const label=o.grav==='critica'?'⛔ Crítico':o.grav==='alta'?'⚠️ Alta':'ℹ️ Média';
+  return `<tr>
+    <td style="white-space:nowrap;color:var(--muted)">${o.data}</td>
+    <td><strong>${o.nome}</strong></td>
+    <td><span style="font-size:11px;color:var(--muted)">${o.tipo}</span></td>
+    <td style="max-width:420px">${o.obs}</td>
+    <td><span style="font-size:11px;font-weight:600;color:${color}">${label}</span></td>
+  </tr>`;
+}).join('');
+
+// ===================== COM TABLE =====================
+let currentSort='receita';
+function sortTable(key, btn){
+  currentSort=key;
+  document.querySelectorAll('#tab-comissionamento .pill').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+  renderComTable();
+}
+function renderComTable(){
+  const sorted=[...comData].sort((a,b)=>b[currentSort]-a[currentSort]);
+  document.getElementById('comTableBody').innerHTML=sorted.map((r,i)=>`<tr>
+    <td class="rank-num ${i<3?'top':''}">${i+1}</td>
+    <td style="font-weight:500">${r.nome}</td>
+    <td>${r.atend}</td>
+    <td><strong>R$ ${r.receita.toLocaleString('pt-BR',{minimumFractionDigits:2})}</strong></td>
+    <td>R$ ${r.ticket.toFixed(2)}</td>
+    <td>R$ ${r.comissao.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
+    <td style="color:var(--green)">R$ ${r.pago.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
+    <td style="color:${r.aberto>0?'var(--red)':'var(--green)'}">R$ ${r.aberto.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
+    <td>${r.dias !== undefined ? r.dias : '—'}</td>
+    <td>${r.magia > 0 ? `<span class="badge badge-gold">✦ ${r.magia}</span>` : '—'}</td>
+  </tr>`).join('');
+}
+renderComTable();
+
+// ===================== RANKING TABLES =====================
+const rankQualData=[...monData].sort((a,b)=>b.score-a.score).slice(0,10);
+document.getElementById('rankQual').innerHTML=rankQualData.map((d,i)=>`
+  <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)">
+    <div class="rank-num ${i<3?'top':''}">${i+1}</div>
+    <div style="flex:1">
+      <div style="font-weight:500;font-size:13px">${d.nome}</div>
+      <div class="score-bar-wrap" style="margin-top:4px">
+        <div class="score-bar-track"><div class="score-bar-fill" style="width:${(d.score/3*100).toFixed(0)}%;background:${scoreColor(d.score)}"></div></div>
+        <span style="font-size:12px;color:var(--muted)">${d.score.toFixed(2)}/3</span>
+      </div>
+    </div>
+    ${d.score>=3?'<span class="star">★</span>':''}
+  </div>`).join('');
+
+const rankRecData=[...comData].sort((a,b)=>b.receita-a.receita).slice(0,10);
+document.getElementById('rankReceita').innerHTML=rankRecData.map((d,i)=>`
+  <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)">
+    <div class="rank-num ${i<3?'top':''}">${i+1}</div>
+    <div style="flex:1">
+      <div style="font-weight:500;font-size:13px">${d.nome}</div>
+      <div class="score-bar-wrap" style="margin-top:4px">
+        <div class="score-bar-track"><div class="score-bar-fill" style="width:${(d.receita/4400*100).toFixed(0)}%;background:var(--gold)"></div></div>
+        <span style="font-size:12px;color:var(--muted)">R$ ${d.receita.toLocaleString('pt-BR',{minimumFractionDigits:0})}</span>
+      </div>
+    </div>
+  </div>`).join('');
+
+// ===================== CHARTS =====================
+const gd=s=>s>=2.9?'rgba(29,138,97,0.8)':s>=2.5?'rgba(176,116,24,0.8)':'rgba(192,57,43,0.8)';
+
+// Score chart
+const scoreSort=[...monData].sort((a,b)=>a.score-b.score);
+new Chart(document.getElementById('scoreChart'),{
+  type:'bar',
+  data:{labels:scoreSort.map(d=>d.nome),datasets:[{label:'Score',data:scoreSort.map(d=>d.score),
+    backgroundColor:scoreSort.map(d=>gd(d.score)),borderRadius:4,borderSkipped:false}]},
+  options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.raw.toFixed(2)} / 3.00`}}},
+    scales:{
+      x:{min:0,max:3.2,grid:{color:'rgba(0,0,0,0.06)'},ticks:{color:'#8a8278'}},
+      y:{grid:{display:false},ticks:{color:'#3d3830',font:{size:11}}}
+    }}
+});
+
+// Criterios avg
+const avgCrit={clareza:0,profund:0,acolh:0,tom:0,conduc:0};
+monData.forEach(d=>{avgCrit.clareza+=d.clareza;avgCrit.profund+=d.profund;avgCrit.acolh+=d.acolh;avgCrit.tom+=d.tom;avgCrit.conduc+=d.conduc;});
+Object.keys(avgCrit).forEach(k=>avgCrit[k]=+(avgCrit[k]/monData.length).toFixed(2));
+new Chart(document.getElementById('criteriosChart'),{
+  type:'bar',
+  data:{
+    labels:['Clareza','Profundidade','Acolhimento','Tom de Voz','Condução'],
+    datasets:[{label:'Média',data:[avgCrit.clareza,avgCrit.profund,avgCrit.acolh,avgCrit.tom,avgCrit.conduc],
+      backgroundColor:['rgba(29,138,97,0.8)','rgba(192,57,43,0.8)','rgba(29,138,97,0.8)','rgba(29,138,97,0.8)','rgba(176,116,24,0.8)'],
+      borderRadius:6,borderSkipped:false}]
+  },
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.raw} / 3.00`}}},
+    scales:{y:{min:1.5,max:3.1,grid:{color:'rgba(0,0,0,0.06)'},ticks:{color:'#8a8278'}},x:{grid:{display:false},ticks:{color:'#3d3830'}}}}
+});
+
+// Oferta chart
+const ofertaSort=[...monData].filter(d=>d.oferta>0).sort((a,b)=>b.oferta-a.oferta);
+new Chart(document.getElementById('ofertaChart'),{
+  type:'bar',
+  data:{labels:ofertaSort.map(d=>d.nome),
+    datasets:[{label:'Taxa de oferta %',data:ofertaSort.map(d=>d.oferta),
+      backgroundColor:ofertaSort.map(d=>d.oferta>=80?'#1d8a61':d.oferta>=50?'#b07418':'#2563a8'),
+      borderRadius:4,borderSkipped:false}]},
+  options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.raw.toFixed(1)}%`}}},
+    scales:{x:{min:0,max:110,grid:{color:'rgba(0,0,0,0.06)'},ticks:{color:'#8a8278',callback:v=>v+'%'}},
+      y:{grid:{display:false},ticks:{color:'#3d3830',font:{size:10}}}}}
+});
+
+// Evolução score
+const evolData=[
+  {d:'27/03',s:2.80},{d:'28/03',s:2.40},{d:'30/03',s:2.88},{d:'31/03',s:2.68},
+  {d:'01/04',s:2.78},{d:'02/04',s:2.93},{d:'06/04',s:2.40},{d:'07/04',s:2.43},
+  {d:'08/04',s:3.00},{d:'09/04',s:2.94},{d:'18/04',s:3.00},{d:'20/04',s:2.94},
+  {d:'22/04',s:3.00},{d:'23/04',s:2.97}
+];
+new Chart(document.getElementById('evolucaoChart'),{
+  type:'line',
+  data:{labels:evolData.map(d=>d.d),datasets:[{label:'Score médio',data:evolData.map(d=>d.s),
+    borderColor:'#c8993a',backgroundColor:'rgba(200,153,58,0.12)',tension:0.4,fill:true,
+    pointRadius:5,pointBackgroundColor:'#c8993a',pointBorderColor:'#fff',pointBorderWidth:2}]},
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` Score ${c.raw.toFixed(2)}/3`}}},
+    scales:{y:{min:2.0,max:3.1,grid:{color:'rgba(0,0,0,0.06)'},ticks:{color:'#8a8278'}},
+      x:{grid:{display:false},ticks:{color:'#3d3830',font:{size:11}}}}}
+});
+
+// COM: receita chart
+const comSort=[...comData].sort((a,b)=>b.receita-a.receita);
+new Chart(document.getElementById('comReceitaChart'),{
+  type:'bar',
+  data:{labels:comSort.map(d=>d.nome.split(' ')[0]),datasets:[
+    {label:'Receita (R$)',data:comSort.map(d=>d.receita),backgroundColor:'rgba(29,138,97,0.8)',borderRadius:3,borderSkipped:false},
+    {label:'Comissão (R$)',data:comSort.map(d=>d.comissao),backgroundColor:'rgba(200,153,58,0.8)',borderRadius:3,borderSkipped:false}
+  ]},
+  options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:true,labels:{color:'#3d3830',font:{size:11}}},
+      tooltip:{callbacks:{label:c=>`${c.dataset.label}: R$ ${c.raw.toLocaleString('pt-BR',{minimumFractionDigits:2})}`}}},
+    scales:{x:{grid:{color:'rgba(0,0,0,0.06)'},ticks:{color:'#8a8278',callback:v=>`R$${(v/1000).toFixed(1)}k`}},
+      y:{grid:{display:false},ticks:{color:'#3d3830',font:{size:10}}}}}
+});
+
+// Daily
+new Chart(document.getElementById('dailyChart'),{
+  type:'bar',
+  data:{labels:dailyData.map(d=>d.d),datasets:[
+    {label:'Atendimentos',data:dailyData.map(d=>d.a),backgroundColor:'rgba(37,99,168,0.8)',borderRadius:4,borderSkipped:false,yAxisID:'y1'},
+    {type:'line',label:'Receita R$',data:dailyData.map(d=>d.r),borderColor:'#c8993a',backgroundColor:'rgba(200,153,58,0.1)',tension:0.4,fill:true,yAxisID:'y2',pointRadius:4,pointBackgroundColor:'#c8993a'}
+  ]},
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:true,labels:{color:'#3d3830',font:{size:10}}}},
+    scales:{
+      y1:{type:'linear',position:'left',grid:{color:'rgba(0,0,0,0.06)'},ticks:{color:'#2563a8'}},
+      y2:{type:'linear',position:'right',grid:{display:false},ticks:{color:'#c8993a',callback:v=>`R$${(v/1000).toFixed(0)}k`}},
+      x:{grid:{display:false},ticks:{color:'#3d3830'}}
+    }}
+});
+
+// Hourly
+const fullHours=[];for(let h=0;h<24;h++){const found=hourlyData.find(d=>d.h===h);fullHours.push({h,a:found?found.a:0});}
+new Chart(document.getElementById('hourlyChart'),{
+  type:'bar',
+  data:{labels:fullHours.map(d=>`${d.h}h`),datasets:[{label:'Atendimentos',data:fullHours.map(d=>d.a),
+    backgroundColor:fullHours.map(d=>d.a>=300?'rgba(200,153,58,0.9)':d.a>=200?'rgba(29,138,97,0.7)':'rgba(37,99,168,0.5)'),
+    borderRadius:3,borderSkipped:false}]},
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.raw} atend.`}}},
+    scales:{y:{grid:{color:'rgba(0,0,0,0.06)'},ticks:{color:'#8a8278'}},x:{grid:{display:false},ticks:{color:'#3d3830',font:{size:10}}}}}
+});
+
+// Packages
+new Chart(document.getElementById('pkgChart'),{
+  type:'bar',
+  data:{labels:pkgData.map(d=>d.p),datasets:[{label:'Vendas',data:pkgData.map(d=>d.n),
+    backgroundColor:['rgba(37,99,168,0.85)','rgba(29,138,97,0.85)',...Array(8).fill('rgba(200,153,58,0.7)')],
+    borderRadius:4,borderSkipped:false}]},
+  options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.raw} vendas`}}},
+    scales:{x:{grid:{color:'rgba(0,0,0,0.06)'},ticks:{color:'#8a8278'}},y:{grid:{display:false},ticks:{color:'#3d3830',font:{size:10}}}}}
+});
+
+// Ticket médio
+const ticketSort=[...comData].filter(d=>d.atend>=50).sort((a,b)=>b.ticket-a.ticket).slice(0,12);
+new Chart(document.getElementById('ticketChart'),{
+  type:'bar',
+  data:{labels:ticketSort.map(d=>d.nome.split(' ')[0]),datasets:[{label:'Ticket médio',data:ticketSort.map(d=>d.ticket),
+    backgroundColor:ticketSort.map(d=>d.ticket>=17?'rgba(200,153,58,0.85)':d.ticket>=16?'rgba(29,138,97,0.75)':'rgba(37,99,168,0.6)'),
+    borderRadius:4,borderSkipped:false}]},
+  options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` R$ ${c.raw.toFixed(2)}`}}},
+    scales:{x:{min:13,max:19,grid:{color:'rgba(0,0,0,0.06)'},ticks:{color:'#8a8278',callback:v=>`R$${v}`}},
+      y:{grid:{display:false},ticks:{color:'#3d3830',font:{size:10}}}}}
+});
+
+// MATRIZ qualidade × volume
+const matrizPoints=[
+  {label:'Cigana Sarah',x:274,y:3.00,r:12},{label:'Luziara',x:241,y:3.00,r:10},
+  {label:'Odara',x:228,y:3.00,r:10},{label:'Ártemis',x:207,y:3.00,r:9},
+  {label:'Quésia',x:199,y:3.00,r:9},{label:'Rafael/H.',x:208,y:2.91,r:9},
+  {label:'Magnus',x:174,y:2.92,r:8},{label:'Apólo',x:171,y:3.00,r:8},
+  {label:'Baronesa Luz',x:169,y:2.96,r:8},{label:'Ganesha',x:137,y:3.00,r:7},
+  {label:'Freyja',x:108,y:2.70,r:6},{label:'Athena',x:154,y:2.85,r:7},
+  {label:'Celina',x:106,y:2.80,r:6},{label:'Celéstia',x:151,y:2.48,r:7},
+  {label:'Maya',x:223,y:2.40,r:9},{label:'Héra',x:125,y:3.00,r:6},
+  {label:'Gaia',x:0,y:2.16,r:5},{label:'Thália',x:0,y:1.40,r:4},
+];
+new Chart(document.getElementById('matrizChart'),{
+  type:'bubble',
+  data:{datasets:[
+    {label:'Score ≥ 3.0',data:matrizPoints.filter(d=>d.y>=3.0),backgroundColor:'rgba(29,138,97,0.7)',borderColor:'rgba(29,138,97,1)',borderWidth:1},
+    {label:'Score 2.5–2.99',data:matrizPoints.filter(d=>d.y>=2.5&&d.y<3.0),backgroundColor:'rgba(176,116,24,0.7)',borderColor:'rgba(176,116,24,1)',borderWidth:1},
+    {label:'Score < 2.5',data:matrizPoints.filter(d=>d.y<2.5),backgroundColor:'rgba(192,57,43,0.7)',borderColor:'rgba(192,57,43,1)',borderWidth:1},
+  ]},
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:true,labels:{color:'#3d3830'}},
+      tooltip:{callbacks:{label:c=>`${c.raw.label} — ${c.raw.x} atend. · Score ${c.raw.y}`}}},
+    scales:{
+      x:{min:0,max:500,title:{display:true,text:'Volume de atendimentos faturados',color:'#8a8278'},grid:{color:'rgba(0,0,0,0.06)'},ticks:{color:'#8a8278'}},
+      y:{min:1.0,max:3.2,title:{display:true,text:'Score de qualidade (monitoria)',color:'#8a8278'},grid:{color:'rgba(0,0,0,0.06)'},ticks:{color:'#8a8278'}}
+    }}
+});
+</script>
+</body>
+</html>
